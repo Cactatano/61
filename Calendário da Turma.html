@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendário da Turma</title>
+<style>
+:root{--bg:#fafaf9;--card:#fff;--tx:#1c1917;--mut:#78716c;--ln:#e7e5e4;--ac:#3e63dd;--hv:#f5f5f4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121110;--card:#1c1b1a;--tx:#f5f5f4;--mut:#a8a29e;--ln:#2e2c2a;--hv:#262422;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121110;--card:#1c1b1a;--tx:#f5f5f4;--mut:#a8a29e;--ln:#2e2c2a;--hv:#262422;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:7px 12px}
+button:hover{background:var(--hv)}
+button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.yr{font-weight:650;min-width:64px;text-align:center}
+.seg button{border-radius:0;margin:0}.seg button:first-child{border-radius:10px 0 0 10px}.seg button:last-child{border-radius:0 10px 10px 0}.seg .on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+input,select,textarea{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+.chip{border-radius:99px;padding:4px 11px;font-size:13px;opacity:.5}.chip.on{opacity:1;border-color:currentColor}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:16px}
+@media(max-width:820px){.layout{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px}
+.year{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.mini h3{margin:0 0 6px;font-size:13px;font-weight:600;cursor:pointer}
+.g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.g .w{font-size:10px;color:var(--mut)}
+.d{position:relative;font-size:12px;padding:5px 0;border-radius:8px;cursor:pointer;min-height:26px}
+.d:hover{background:var(--hv)}.d.today{outline:2px solid var(--ac)}.d.sel{background:var(--hv)}
+.dots{display:flex;gap:2px;justify-content:center;height:5px}.dots i{width:5px;height:5px;border-radius:50%}
+.big .d{min-height:84px;text-align:left;padding:5px;font-size:13px;border:1px solid var(--ln);border-radius:10px}
+.big .g{gap:4px}
+.ev{display:block;font-size:11px;color:#fff;border-radius:5px;padding:1px 5px;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.out{opacity:.35}
+.item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln);cursor:pointer}.item:last-child{border:0}
+.bar{width:5px;border-radius:5px;flex:none}
+.item b{display:block}.mut{color:var(--mut);font-size:13px}
+.side h2{font-size:14px;margin:0 0 6px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:0}
+@media(min-width:600px){.modal{align-items:center;padding:16px}}
+.sheet{background:var(--card);width:100%;max-width:460px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+@media(min-width:600px){.sheet{border-radius:18px}}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sw{display:flex;gap:8px;flex-wrap:wrap}.sw i{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent}.sw i.on{border-color:var(--tx)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--tx);color:var(--bg);padding:11px 16px;border-radius:12px;z-index:30;max-width:90%}
+.banner{background:#f5a52422;border:1px solid #f5a524;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>📅 Calendário da Turma</h1>
+<div class="row">
+<button id="prev">‹</button><span class="yr" id="yr"></span><button id="next">›</button>
+<span class="seg"><button id="vy" class="on">Ano</button><button id="vm">Mês</button></span>
+<button id="today">Hoje</button>
+<button id="help" title="Tutorial">?</button>
+<button id="add" class="pri">+ Evento</button>
+</div>
+</header>
+<div id="banner"></div>
+<div class="row"><input id="q" placeholder="Buscar evento…" style="max-width:260px"><button id="ics">⬇ Exportar .ics</button><button id="theme">🌓</button></div>
+<div class="chips" id="chips"></div>
+<div class="layout">
+<main class="card" id="main"></main>
+<aside class="side">
+<div class="card" style="margin-bottom:12px"><h2>⏳ Próxima prova</h2><div id="nextp" class="mut">Nenhuma prova marcada</div></div>
+<div class="card"><h2 id="sidet">Próximos eventos</h2><div id="list"></div></div>
+</aside>
+</div>
+</div>
+<div id="modal"></div>
+<script>
+const TYPES={prova:{n:"Prova",c:"#e5484d"},trabalho:{n:"Trabalho",c:"#f5a524"},evento:{n:"Evento",c:"#3e63dd"},outro:{n:"Outro",c:"#30a46c"}};
+const COLORS=["#e5484d","#f5a524","#3e63dd","#30a46c","#8e4ec6","#12a594","#d6409f","#6f6e77"];
+const MES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const IMP=["Baixa","Média","Alta"];
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,"0");
+const iso=(y,m,d)=>y+"-"+pad(m+1)+"-"+pad(d);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const now=new Date();
+let S={y:now.getFullYear(),m:now.getMonth(),view:"year",sel:null,q:"",f:new Set(Object.keys(TYPES))};
+let EV=[],db=null,me=null,userApi=null,dl=null,names={},fired={};
+const todayIso=()=>{const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate())};
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+
+function vis(){const q=S.q.toLowerCase();return EV.filter(e=>S.f.has(e.type)&&(!q||(e.title+" "+(e.notes||"")).toLowerCase().includes(q)))}
+function byDay(list){const o={};list.forEach(e=>{(o[e.date]=o[e.date]||[]).push(e)});for(const k in o)o[k].sort((a,b)=>(a.start||"").localeCompare(b.start||""));return o}
+
+function grid(y,m,big,bd){
+  const first=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate();
+  let h='<div class="g">'+"DSTQQSS".split("").map(w=>'<div class="w">'+w+'</div>').join("");
+  for(let i=0;i<first;i++)h+="<div></div>";
+  for(let d=1;d<=n;d++){
+    const k=iso(y,m,d),es=bd[k]||[];
+    h+='<div class="d'+(k===todayIso()?" today":"")+(k===S.sel?" sel":"")+'" data-d="'+k+'">'+d;
+    if(big)h+=es.slice(0,3).map(e=>'<span class="ev" style="background:'+esc(e.color)+'">'+esc((e.start?e.start+" ":"")+e.title)+'</span>').join("")+(es.length>3?'<span class="mut">+'+(es.length-3)+'</span>':"");
+    else h+='<div class="dots">'+es.slice(0,3).map(e=>'<i style="background:'+esc(e.color)+'"></i>').join("")+'</div>';
+    h+="</div>";
+  }
+  return h+"</div>";
+}
+
+function render(){
+  const bd=byDay(vis());
+  $("#yr").textContent=S.view==="year"?S.y:MES[S.m]+" "+S.y;
+  $("#vy").className=S.view==="year"?"on":"";$("#vm").className=S.view==="month"?"on":"";
+  const mn=$("#main");
+  if(S.view==="year"){
+    mn.className="card";
+    mn.innerHTML='<div class="year">'+MES.map((n,i)=>'<div class="mini"><h3 data-m="'+i+'">'+n+'</h3>'+grid(S.y,i,false,bd)+'</div>').join("")+"</div>";
+  }else{mn.className="card big";mn.innerHTML=grid(S.y,S.m,true,bd)}
+  $("#chips").innerHTML=Object.keys(TYPES).map(k=>'<button class="chip'+(S.f.has(k)?" on":"")+'" data-t="'+k+'" style="color:'+TYPES[k].c+'">● '+TYPES[k].n+'</button>').join("");
+  // side list
+  let list,title;
+  if(S.sel){list=(bd[S.sel]||[]);title="Dia "+S.sel.split("-").reverse().join("/")+' <button id="addday" style="padding:2px 8px;margin-left:6px">+</button>'}
+  else{const t=todayIso();list=vis().filter(e=>e.date>=t).sort((a,b)=>(a.date+(a.start||"")).localeCompare(b.date+(b.start||""))).slice(0,12);title="Próximos eventos"}
+  $("#sidet").innerHTML=title;
+  $("#list").innerHTML=list.length?list.map(e=>'<div class="item" data-e="'+esc(e.id)+'"><span class="bar" style="background:'+esc(e.color)+'"></span><div><b>'+esc(e.title)+'</b><span class="mut">'+(S.sel?"":e.date.split("-").reverse().join("/")+" · ")+(e.start?e.start+(e.end?"–"+e.end:""):"dia todo")+" · "+TYPES[e.type].n+" · "+"★".repeat(+e.imp+1)+(e.alarm!==""&&e.alarm!=null?" · ⏰":"")+'</span></div></div>').join(""):'<div class="mut">Nada por aqui. Toque em + para adicionar.</div>';
+  const p=EV.filter(e=>e.type==="prova"&&e.date>=todayIso()).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  if(p){const dd=Math.round((new Date(p.date+"T00:00")-new Date(todayIso()+"T00:00"))/864e5);$("#nextp").innerHTML="<b>"+esc(p.title)+"</b><br>"+(dd===0?"É hoje!":dd===1?"Amanhã":"Em "+dd+" dias")+" · "+p.date.split("-").reverse().join("/")}
+  else $("#nextp").textContent="Nenhuma prova marcada";
+}
+
+function who(id){return names[id]||"alguém"}
+function openModal(e,date){
+  e=e||{title:"",type:"prova",date:date||S.sel||todayIso(),start:"",end:"",color:TYPES.prova.c,imp:1,alarm:"",notes:""};
+  const isNew=!e.id;
+  $("#modal").innerHTML='<div class="modal"><div class="sheet"><b style="font-size:17px">'+(isNew?"Novo evento":"Editar evento")+'</b>'+
+  '<label>Título</label><input id="f_t" value="'+esc(e.title)+'" placeholder="Ex.: Prova de Matemática">'+
+  '<div class="two"><div><label>Tipo</label><select id="f_ty">'+Object.keys(TYPES).map(k=>'<option value="'+k+'"'+(e.type===k?" selected":"")+">"+TYPES[k].n+"</option>").join("")+'</select></div><div><label>Importância</label><select id="f_i">'+IMP.map((n,i)=>'<option value="'+i+'"'+(+e.imp===i?" selected":"")+">"+n+"</option>").join("")+'</select></div></div>'+
+  '<label>Data</label><input id="f_d" type="date" value="'+esc(e.date)+'">'+
+  '<div class="two"><div><label>Início</label><input id="f_s" type="time" value="'+esc(e.start)+'"></div><div><label>Fim</label><input id="f_e" type="time" value="'+esc(e.end)+'"></div></div>'+
+  '<label>Alarme</label><select id="f_a">'+[["","Sem alarme"],["0","Na hora"],["10","10 min antes"],["60","1 hora antes"],["1440","1 dia antes"]].map(a=>'<option value="'+a[0]+'"'+(String(e.alarm??"")===a[0]?" selected":"")+">"+a[1]+"</option>").join("")+'</select>'+
+  '<label>Cor</label><div class="sw" id="f_c">'+COLORS.map(c=>'<i data-c="'+c+'" style="background:'+c+'" class="'+(e.color===c?"on":"")+'"></i>').join("")+'</div>'+
+  '<label>Detalhes</label><textarea id="f_n" rows="3" placeholder="Matéria, conteúdo, sala…">'+esc(e.notes)+'</textarea>'+
+  (e.by?'<div class="mut" style="margin-top:8px">Criado por '+esc(who(e.by))+'</div>':"")+
+  '<div class="row" style="margin-top:14px;justify-content:space-between"><span>'+(isNew?"":'<button id="f_x">Excluir</button>')+'</span><span class="row"><button id="f_cancel">Cancelar</button><button id="f_ok" class="pri">Salvar</button></span></div></div></div>';
+  let col=e.color;
+  $("#f_ty").onchange=()=>{if(isNew||col===TYPES[e.type].c){col=TYPES[$("#f_ty").value].c;sw()}};
+  const sw=()=>document.querySelectorAll("#f_c i").forEach(i=>i.className=i.dataset.c===col?"on":"");
+  $("#f_c").onclick=ev=>{if(ev.target.dataset.c){col=ev.target.dataset.c;sw()}};
+  $("#f_cancel").onclick=()=>$("#modal").innerHTML="";
+  $(".modal").onclick=ev=>{if(ev.target.classList.contains("modal"))$("#modal").innerHTML=""};
+  if($("#f_x"))$("#f_x").onclick=async()=>{if(confirm("Excluir este evento para todos?")){await del(e.id);$("#modal").innerHTML=""}};
+  $("#f_ok").onclick=async()=>{
+    const t=$("#f_t").value.trim();if(!t){$("#f_t").focus();return}
+    const o={title:t,type:$("#f_ty").value,imp:+$("#f_i").value,date:$("#f_d").value||todayIso(),start:$("#f_s").value,end:$("#f_e").value,alarm:$("#f_a").value,color:col,notes:$("#f_n").value.trim(),by:e.by||me||"local",ts:Date.now()};
+    await save(e.id,o);S.sel=o.date;const d=o.date.split("-");S.y=+d[0];S.m=+d[1]-1;$("#modal").innerHTML="";render();
+  };
+  setTimeout(()=>$("#f_t").focus(),50);
+}
+
+async function save(id,o){
+  if(db){try{await db.collection("events").doc(id||undefined).set(o);return}catch(err){toast("Não foi possível salvar: sem permissão ou conexão.");return}}
+  if(id){const i=EV.findIndex(x=>x.id===id);EV[i]={...o,id}}else EV.push({...o,id:"l"+Date.now()});render();
+}
+async function del(id){
+  if(db){try{await db.collection("events").doc(id).delete()}catch(err){toast("Não foi possível excluir.")}}
+  else{EV=EV.filter(x=>x.id!==id);render()}
+}
+
+function toast(t,ms){const el=document.createElement("div");el.className="toast";el.textContent=t;document.body.appendChild(el);setTimeout(()=>el.remove(),ms||4500)}
+
+function checkAlarms(){
+  const n=Date.now();
+  EV.forEach(e=>{
+    if(e.alarm===""||e.alarm==null||fired[e.id+e.date+e.start+e.alarm])return;
+    const t=new Date(e.date+"T"+(e.start||"08:00")).getTime()-(+e.alarm)*6e4;
+    if(n>=t&&n<t+36e5){
+      fired[e.id+e.date+e.start+e.alarm]=1;lsSet("fired",JSON.stringify(fired));
+      const m="⏰ "+e.title+(e.start?" às "+e.start:" hoje");toast(m,9000);
+      try{if(window.Notification&&Notification.permission==="granted")new Notification(m)}catch(x){}
+    }
+  });
+}
+
+function tutorial(){
+  const steps=[["Bem-vindo! 👋","Este é o calendário da turma. Todo mundo vê e edita os mesmos eventos em tempo real."],["Navegue","Use ‹ › para trocar de ano ou mês. Toque no nome de um mês na visão Ano para abri-lo."],["Adicione eventos","Toque em um dia para ver o que tem nele e use + para criar prova, trabalho ou evento, com horário, cor, importância e alarme."],["Dicas","Use os filtros coloridos e a busca. Os alarmes tocam enquanto a página estiver aberta. Exporte tudo em .ics para o seu celular."]];
+  let i=0;
+  const show=()=>{
+    $("#modal").innerHTML='<div class="modal"><div class="sheet"><b style="font-size:18px">'+steps[i][0]+'</b><p>'+steps[i][1]+'</p><div class="row" style="justify-content:space-between"><span class="mut">'+(i+1)+"/"+steps.length+'</span><span class="row"><button id="t_skip">Fechar</button><button id="t_next" class="pri">'+(i<steps.length-1?"Próximo":"Começar")+'</button></span></div></div></div>';
+    $("#t_skip").onclick=end;$("#t_next").onclick=()=>{if(i<steps.length-1){i++;show()}else end()};
+  };
+  const end=()=>{$("#modal").innerHTML="";lsSet("tut","1")};
+  show();
+}
+
+async function exportIcs(){
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Calendario da Turma//PT"];
+  EV.forEach(e=>{const d=e.date.replace(/-/g,"");const s=(e.start||"").replace(":",""),f=(e.end||e.start||"").replace(":","");
+    L.push("BEGIN:VEVENT","UID:"+e.id+"@turma","DTSTAMP:"+d+"T000000",e.start?"DTSTART:"+d+"T"+s+"00":"DTSTART;VALUE=DATE:"+d,e.start?"DTEND:"+d+"T"+f+"00":"DTEND;VALUE=DATE:"+d,"SUMMARY:"+TYPES[e.type].n+": "+e.title.replace(/[,;\n]/g," "),"DESCRIPTION:"+(e.notes||"").replace(/\n/g," ").replace(/[,;]/g," "),"END:VEVENT")});
+  L.push("END:VCALENDAR");
+  const data=L.join("\r\n");
+  if(dl){try{await dl.save({filename:"calendario-turma.ics",data:data});return}catch(x){return}}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"text/calendar"}));a.download="calendario-turma.ics";a.click();
+}
+
+// eventos de clique
+document.addEventListener("click",ev=>{
+  const t=ev.target;
+  const d=t.closest("[data-d]");if(d){S.sel=d.dataset.d;const p=S.sel.split("-");S.y=+p[0];S.m=+p[1]-1;render();return}
+  const mh=t.closest("[data-m]");if(mh){S.m=+mh.dataset.m;S.view="month";render();return}
+  const it=t.closest("[data-e]");if(it){const e=EV.find(x=>x.id===it.dataset.e);if(e)openModal(e);return}
+  const ch=t.closest("[data-t]");if(ch){const k=ch.dataset.t;S.f.has(k)?S.f.delete(k):S.f.add(k);render();return}
+  if(t.id==="addday")openModal(null,S.sel);
+});
+$("#prev").onclick=()=>{if(S.view==="year")S.y--;else{S.m--;if(S.m<0){S.m=11;S.y--}}render()};
+$("#next").onclick=()=>{if(S.view==="year")S.y++;else{S.m++;if(S.m>11){S.m=0;S.y++}}render()};
+$("#vy").onclick=()=>{S.view="year";render()};$("#vm").onclick=()=>{S.view="month";render()};
+$("#today").onclick=()=>{S.y=now.getFullYear();S.m=now.getMonth();S.sel=todayIso();render()};
+$("#add").onclick=()=>{openModal();try{if(window.Notification&&Notification.permission==="default")Notification.requestPermission()}catch(x){}};
+$("#help").onclick=tutorial;$("#ics").onclick=exportIcs;
+$("#q").oninput=e=>{S.q=e.target.value;render()};
+$("#theme").onclick=()=>{const r=document.documentElement,dark=getComputedStyle(r).colorScheme==="dark";r.dataset.theme=dark?"light":"dark";lsSet("theme",r.dataset.theme)};
+if(lsGet("theme"))document.documentElement.dataset.theme=lsGet("theme");
+try{fired=JSON.parse(lsGet("fired")||"{}")}catch(x){}
+
+// inicialização: colaboração em tempo real quando disponível
+render();
+if(!lsGet("tut"))setTimeout(tutorial,400);
+setInterval(checkAlarms,30000);
+(async()=>{
+  let offline=true;
+  try{
+    dl=await claude.use("downloads");userApi=await claude.use("user");
+    db=await claude.use("db");
+    if(db){
+      offline=false;
+      try{me=await userApi.id()}catch(x){}
+      db.collection("events").onSnapshot(async s=>{
+        EV=s.docs.map(d=>({id:d.id,...d.data()}));
+        try{const ids=[...new Set(EV.map(e=>e.by).filter(Boolean))];if(ids.length){const p=await userApi.profiles(ids);ids.forEach(i=>{if(p[i]&&p[i].name)names[i]=p[i].name})}}catch(x){}
+        render();checkAlarms();
+      },()=>{});
+    }
+  }catch(x){}
+  if(offline)$("#banner").innerHTML='<div class="banner">Modo local: entre com sua conta para ver e editar os eventos compartilhados da turma.</div>';
+})();
+</script>
+</body>
+</html>
